@@ -3,6 +3,7 @@ package gui;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 
 import application.Main;
 import javafx.fxml.FXML;
@@ -33,12 +34,15 @@ public class MainViewController implements Initializable {
 	
 	@FXML
 	public void onMenuItemDepartmentAction() {
-		loadViewTemp("/gui/DepartmentList.fxml");
+		loadView("/gui/DepartmentList.fxml", (DepartmentListController controller) -> {
+			controller.setService(new DepartmentService());
+			controller.updateTableView();			
+		});
 	}
 	
 	@FXML
 	public void onMenuItemAboutAction() {
-		loadView("/gui/About.fxml");
+		loadView("/gui/About.fxml", (x) -> {});
 	}
 	
 	
@@ -47,7 +51,7 @@ public class MainViewController implements Initializable {
 		
 	}
 	
-	private synchronized void loadView(String absoluteName) {
+	private synchronized <T> void loadView(String absoluteName, Consumer<T> controllerAction) {
 		
 		FXMLLoader loader = new FXMLLoader(getClass().getResource(absoluteName));
 		
@@ -58,31 +62,10 @@ public class MainViewController implements Initializable {
 		} catch (IOException e) {		
 			e.printStackTrace();
 		}
-		
-		Scene mainScene = Main.getMainScene();
-		
-		VBox mainVBox = (VBox) ((ScrollPane) mainScene.getRoot()).getContent();
-		Node mainMenu = mainVBox.getChildren().get(0);
-		mainVBox.getChildren().clear();
-		mainVBox.getChildren().add(mainMenu);
-		mainVBox.getChildren().addAll(newVBox.getChildren());
-	}
 	
-	private synchronized void loadViewTemp(String absoluteName) {
+		T controller = loader.getController();
 		
-		FXMLLoader loader = new FXMLLoader(getClass().getResource(absoluteName));
-		
-		VBox newVBox = null;
-		
-		try {
-			newVBox = loader.load();
-		} catch (IOException e) {		
-			e.printStackTrace();
-		}
-		
-		DepartmentListController controller = loader.getController();
-		controller.setService(new DepartmentService());
-		controller.updateTableView();
+		controllerAction.accept(controller);
 		
 		Scene mainScene = Main.getMainScene();
 		
@@ -92,5 +75,4 @@ public class MainViewController implements Initializable {
 		mainVBox.getChildren().add(mainMenu);
 		mainVBox.getChildren().addAll(newVBox.getChildren());
 	}
-
 }
