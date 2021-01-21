@@ -1,9 +1,11 @@
 package gui;
 
 import java.net.URL;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -105,10 +107,31 @@ public class SellerFormController implements Initializable {
 		seller.setId(Utils.tryParseToInt(txtId.getText()));
 
 		if (txtName.getText() == null || txtName.getText().trim().equals("")) {
-			exception.addError("name", "Field name can't be null");
+			exception.addError("name", "Field name can't be empty");
 		}
 
 		seller.setName(txtName.getText());
+
+		if (txtEmail.getText() == null || txtEmail.getText().trim().equals("")) {
+			exception.addError("email", "Field email can't be empty");
+		}
+
+		seller.setEmail(txtEmail.getText());
+
+		if (dtpBirthDate.getValue() == null) {
+			exception.addError("birthDate", "Field Birth Date can't be empty");
+		} else {
+			Instant instant = Instant.from(dtpBirthDate.getValue().atStartOfDay(ZoneId.systemDefault()));
+			seller.setBirthDate(Date.from(instant));
+		}
+
+		if (txtBaseSalary.getText() == null || txtBaseSalary.getText().trim().equals("")) {
+			exception.addError("baseSalary", "Field Base Salary can't be empty");
+		}
+
+		seller.setBaseSalary(Utils.tryParseToDouble(txtBaseSalary.getText()));
+
+		seller.setDepartment(comboBoxDepartment.getValue());
 
 		if (exception.getErrors().size() > 0) {
 			throw exception;
@@ -120,9 +143,11 @@ public class SellerFormController implements Initializable {
 	private void setErrorsMessages(Map<String, String> errors) {
 		Set<String> fields = errors.keySet();
 
-		if (fields.contains("name")) {
-			labelError.setText(errors.get("name"));
-		}
+		labelError.setText(fields.contains("name") ? errors.get("name") : "");
+		labelErrorEmail.setText(fields.contains("email") ? errors.get("email") : "");
+		labelErrorBirthDate.setText(fields.contains("birthDate") ? errors.get("birthDate") : "");
+		labelErrorBaseSalary.setText(fields.contains("baseSalary") ? errors.get("baseSalary") : "");
+
 	}
 
 	@FXML
@@ -157,7 +182,12 @@ public class SellerFormController implements Initializable {
 		}
 		Locale.setDefault(Locale.US);
 		txtBaseSalary.setText(String.format("%.2f", entity.getBaseSalary()));
-		comboBoxDepartment.setValue(entity.getDepartment());
+		
+		if (entity.getDepartment() == null) {
+			comboBoxDepartment.getSelectionModel().selectFirst();
+		} else {
+			comboBoxDepartment.setValue(entity.getDepartment());
+		}
 	}
 
 	private void initializeNodes() {
